@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# stillly.xyz
 
-## Getting Started
+A premium, black-and-white personal site for **stillly_dev** — interactive 3D, live Discord presence, an admin-driven portfolio, and a set of hidden personal tools.
 
-First, run the development server:
+Built with **Next.js 16 (App Router) · React 19 · Tailwind v4 · react-three-fiber · Supabase · Groq · Lanyard**. No page templates — everything is hand-built.
+
+## What's inside
+
+| Surface | Route | Notes |
+|---|---|---|
+| Home + Bio | `/` | Splash screen, mouse-reactive WebGL hero (simplex-noise point cloud + bloom), scroll-driven 3D scenes, and a **live Discord presence** card (Lanyard, with Spotify now-playing). |
+| Portfolio | `/portfolio` | Project grid with accessible **"Learn more"** modals + image galleries. |
+| Admin | `/admin` | **Discord OAuth, owner-only.** CRUD projects, upload images. |
+| Humanizer | `/humanizer` | Hidden tool. Strips AI tells from text via Groq + the [blader/humanizer](https://github.com/blader/humanizer) ruleset. |
+| Source Checker | `/source-checker` | Hidden tool. Scores an article URL or a pasted screenshot for reliability (Groq, vision-capable). |
+| Arcade | `/arcade` | Hidden. Open-source browser games, fullscreen-capable. |
+
+The three tool pages are **unlinked, `noindex`, and excluded from the sitemap**. Set `TOOLS_PASSPHRASE` for an optional soft gate (`/humanizer?key=...`).
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # fill in the values (see below)
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The site runs immediately with **sample data** — Supabase, Groq and Lanyard each degrade gracefully until configured.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Discord presence (Lanyard)
+- Set `NEXT_PUBLIC_LANYARD_USER_ID` to your numeric Discord user ID.
+- Join the **Lanyard Discord server** (`discord.gg/lanyard`) so the public API can see your presence.
 
-## Learn More
+### 2. Supabase (portfolio + admin + image storage)
+1. Create a Supabase project; copy the URL + anon key + service-role key into `.env.local`.
+2. **Auth → Providers → Discord:** enable it, paste your Discord app's client ID/secret. Add redirect `https://<project-ref>.supabase.co/auth/v1/callback` to the Discord app (and your site's `/auth/callback`).
+3. Run the SQL in `/sql` **in order** (`001_schema.sql`, `002_rls.sql`, `003_storage.sql`). Replace `<ADMIN_UUID>` in 002/003 with your Supabase auth UUID (visible under **Authentication → Users** after you sign in once).
+4. Put that same UUID in `NEXT_PUBLIC_ADMIN_USER_ID` — it's the **only** account allowed into `/admin`.
 
-To learn more about Next.js, take a look at the following resources:
+Access is enforced three ways: proxy/middleware redirect, a server-side guard on every admin action, and Postgres RLS.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 3. Groq (tools)
+- Set `GROQ_API_KEY`. Models are configurable via `GROQ_TEXT_MODEL` / `GROQ_VISION_MODEL`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 4. Arcade games
+Each game in `lib/games.ts` is `available: false` until you drop its static build into `public/games/<slug>/index.html`, then flip the flag. Only the listed open-source titles are included — proprietary games (Block Blast, People Playground) are intentionally excluded.
 
-## Deploy on Vercel
+### Optional assets
+- Replace `app/favicon.ico` with your avatar.
+- Drop `public/audio/ambient.mp3` to enable the opt-in background-music widget.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploy (Vercel)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Push to GitHub → import in Vercel → add all env vars → set the domain to `stillly.xyz`. Add your production `…/auth/callback` URL to both Supabase and the Discord app.
+
+## Project layout
+
+```
+app/          routes (home, portfolio, admin, auth, api, hidden tools)
+components/   ui, home, bio, portfolio, admin, tools, arcade, splash, audio
+three/        WebGL scenes (HeroParticles + shaders, ObjectScene, Effects)
+lib/          supabase clients, lanyard hook, groq, prompts, data access
+sql/          Supabase schema + RLS + storage migrations
+```
