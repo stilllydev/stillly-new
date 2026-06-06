@@ -3,7 +3,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 
 const HIDDEN_PREFIXES = ["/humanizer", "/source-checker", "/arcade"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Optional soft gate for the hidden tool pages.
   // Set TOOLS_PASSPHRASE to require ?key=... once (stored in a cookie). Unset = unlinked + noindex only.
   const passphrase = process.env.TOOLS_PASSPHRASE;
