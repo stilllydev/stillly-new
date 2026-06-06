@@ -1,0 +1,176 @@
+@import "tailwindcss";
+
+/* =========================================================
+   stillly.xyz — monochrome design system (black / white)
+   Tailwind v4 theme tokens
+   ========================================================= */
+@theme inline {
+  --color-bg: #000000;
+  --color-bg-soft: #0a0a0c;
+  --color-fg: #f4f4f5;
+  --color-fg-dim: #a1a1aa;
+  --color-fg-faint: #5f5f6b;
+  --color-line: rgba(255, 255, 255, 0.1);
+  --color-surface: rgba(255, 255, 255, 0.035);
+  --color-surface-2: rgba(255, 255, 255, 0.07);
+
+  --font-display: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: #fff;
+  color: #000;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Hide native cursor only when our custom cursor is active (desktop, fine pointer) */
+@media (hover: hover) and (pointer: fine) {
+  body.cursor-ready,
+  body.cursor-ready a,
+  body.cursor-ready button {
+    cursor: none;
+  }
+}
+
+/* ---------- Film grain overlay ---------- */
+.grain {
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 0.6s steps(3) infinite;
+}
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(-2%, 1%); }
+  66% { transform: translate(1%, -2%); }
+}
+
+/* ---------- Vignette ---------- */
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 0%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* ---------- Custom cursor ---------- */
+.cursor-ring,
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: difference;
+  will-change: transform;
+}
+.cursor-ring {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid #fff;
+  transition: width 0.25s var(--ease), height 0.25s var(--ease), background 0.25s var(--ease);
+}
+.cursor-dot {
+  width: 5px;
+  height: 5px;
+  background: #fff;
+}
+.cursor-ring.is-hover {
+  width: 58px;
+  height: 58px;
+  background: rgba(255, 255, 255, 0.12);
+}
+@media (hover: none), (pointer: coarse) {
+  .cursor-ring, .cursor-dot { display: none; }
+}
+
+/* ---------- Glass ---------- */
+.glass {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* ---------- Shimmer text (mono) ---------- */
+.shimmer {
+  background: linear-gradient(110deg, #4a4a52 0%, #ffffff 50%, #4a4a52 100%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+@keyframes shimmer {
+  to { background-position: 220% center; }
+}
+
+/* ---------- Reveal on scroll ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Status dot pulse ---------- */
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5); }
+  70% { box-shadow: 0 0 0 9px rgba(255, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .grain { display: none; }
+  .reveal { opacity: 1; transform: none; }
+}
