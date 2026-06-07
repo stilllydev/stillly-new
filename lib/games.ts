@@ -23,7 +23,7 @@ export const games: Game[] = [
     blurb: "Slide tiles, chase the big numbers. The classic time-sink.",
     source: "https://github.com/gabrielecirulli/2048",
     license: "MIT",
-    available: false,
+    available: true,
   },
   {
     slug: "hextris",
@@ -31,7 +31,7 @@ export const games: Game[] = [
     blurb: "Tetris on a spinning hexagon. Deceptively hard.",
     source: "https://github.com/Hextris/hextris",
     license: "GPL-3.0",
-    available: false,
+    available: true,
   },
   {
     slug: "hexgl",
@@ -39,7 +39,7 @@ export const games: Game[] = [
     blurb: "A blazing-fast futuristic WebGL racer.",
     source: "https://github.com/BKcore/HexGL",
     license: "MIT",
-    available: false,
+    available: true,
   },
   {
     slug: "astray",
@@ -47,23 +47,23 @@ export const games: Game[] = [
     blurb: "Tilt your way through a procedurally generated 3D maze.",
     source: "https://github.com/wwwtyro/astray",
     license: "MIT",
-    available: false,
+    available: true,
   },
   {
     slug: "block-puzzle",
     title: "Block Puzzle",
-    blurb: "An open-source block-blast-style puzzle. Clear the grid.",
-    source: "https://github.com/topics/block-puzzle",
-    license: "Open source (verify on vendor)",
-    available: false,
+    blurb: "A block-blast-style puzzle. Place pieces, clear rows & columns.",
+    source: "https://github.com/stilllydev/stillly-new",
+    license: "Original (MIT)",
+    available: true,
   },
   {
     slug: "sandbox",
     title: "Physics Sandbox",
-    blurb: "Drop, drag and smash. A Matter.js playground.",
+    blurb: "Drop, drag and smash. Built on Matter.js.",
     source: "https://github.com/liabru/matter-js",
-    license: "MIT",
-    available: false,
+    license: "MIT (Matter.js)",
+    available: true,
   },
 ];
 

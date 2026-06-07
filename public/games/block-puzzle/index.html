@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Block Puzzle</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: #000; overflow: hidden; }
+  body {
+    font-family: ui-monospace, "JetBrains Mono", monospace; color: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    user-select: none; touch-action: manipulation;
+  }
+  .top { display: flex; align-items: baseline; gap: 16px; }
+  .score { font-size: 30px; font-weight: 700; }
+  .label { font-size: 11px; color: #6b6b75; letter-spacing: .2em; text-transform: uppercase; }
+  #board { background: #0a0a0c; border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; touch-action: none; }
+  #tray { display: flex; gap: 14px; height: 96px; align-items: center; justify-content: center; }
+  .piece { cursor: pointer; padding: 6px; border-radius: 12px; transition: background .15s, transform .15s; }
+  .piece.sel { background: rgba(255,255,255,0.1); transform: scale(1.05); }
+  .piece.used { opacity: 0; pointer-events: none; }
+  .over {
+    position: fixed; inset: 0; display: none; flex-direction: column; gap: 14px;
+    align-items: center; justify-content: center; background: rgba(0,0,0,0.82); backdrop-filter: blur(6px);
+  }
+  .over.show { display: flex; }
+  .over h1 { font-size: 26px; }
+  button {
+    background: #fff; color: #000; border: 0; border-radius: 999px; padding: 11px 24px;
+    font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .hint { font-size: 11px; color: #6b6b75; }
+</style>
+</head>
+<body>
+  <div class="top">
+    <div><div class="label">Score</div><div class="score" id="score">0</div></div>
+    <div><div class="label">Best</div><div class="score" id="best">0</div></div>
+  </div>
+  <canvas id="board"></canvas>
+  <div id="tray"></div>
+  <div class="hint">pick a piece, then tap the grid · clear full rows &amp; columns</div>
+
+  <div class="over" id="over">
+    <h1>No moves left</h1>
+    <div class="label" id="finalScore"></div>
+    <button id="again">Play again</button>
+  </div>
+
+<script>
+const N = 8;
+const SHAPES = [
+  [[0,0]],
+  [[0,0],[1,0]], [[0,0],[0,1]],
+  [[0,0],[1,0],[2,0]], [[0,0],[0,1],[0,2]],
+  [[0,0],[1,0],[2,0],[3,0]], [[0,0],[0,1],[0,2],[0,3]],
+  [[0,0],[1,0],[0,1],[1,1]],
+  [[0,0],[1,0],[2,0],[0,1],[0,2]], // L
+  [[0,0],[1,0],[2,0],[2,1],[2,2]], // J
+  [[0,0],[1,0],[1,1],[2,1]],       // S
+  [[1,0],[2,0],[0,1],[1,1]],       // Z
+  [[0,0],[1,0],[2,0],[1,1]],       // T
+  [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[0,2],[1,2],[2,2]], // 3x3
+];
+
+const cv = document.getElementById('board');
+const ctx = cv.getContext('2d');
+let CELL = 46, GAP = 4;
+
+function sizeBoard() {
+  const max = Math.min(innerWidth - 32, innerHeight - 260, 460);
+  CELL = Math.floor((max - GAP * (N + 1)) / N);
+  const dim = CELL * N + GAP * (N + 1);
+  const dpr = Math.min(devicePixelRatio, 2);
+  cv.width = dim * dpr; cv.height = dim * dpr;
+  cv.style.width = dim + 'px'; cv.style.height = dim + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  draw();
+}
+
+let grid = Array.from({ length: N }, () => Array(N).fill(0));
+let tray = [];
+let sel = -1;
+let hover = null; // {r,c} anchor
+let score = 0;
+let best = Number(localStorage.getItem('bp_best') || 0);
+document.getElementById('best').textContent = best;
+
+function randPiece() {
+  const s = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+  let maxX = 0, maxY = 0;
+  s.forEach(([x, y]) => { maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); });
+  return { cells: s, w: maxX + 1, h: maxY + 1 };
+}
+function refill() { tray = [randPiece(), randPiece(), randPiece()]; renderTray(); }
+
+function cellXY(c, r) { return [GAP + c * (CELL + GAP), GAP + r * (CELL + GAP)]; }
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const [x, y] = cellXY(c, r);
+    if (grid[r][c]) { ctx.fillStyle = '#fff'; roundRect(x, y, CELL, CELL, 6); ctx.fill(); }
+    else { ctx.fillStyle = 'rgba(255,255,255,0.05)'; roundRect(x, y, CELL, CELL, 6); ctx.fill(); }
+  }
+  // hover preview
+  if (sel >= 0 && hover && tray[sel]) {
+    const p = tray[sel];
+    const ok = canPlace(p, hover.r, hover.c);
+    ctx.fillStyle = ok ? 'rgba(255,255,255,0.55)' : 'rgba(255,80,80,0.45)';
+    p.cells.forEach(([dx, dy]) => {
+      const r = hover.r + dy, c = hover.c + dx;
+      if (r < 0 || c < 0 || r >= N || c >= N) return;
+      const [x, y] = cellXY(c, r); roundRect(x, y, CELL, CELL, 6); ctx.fill();
+    });
+  }
+}
+
+function canPlace(p, r, c) {
+  return p.cells.every(([dx, dy]) => {
+    const rr = r + dy, cc = c + dx;
+    return rr >= 0 && cc >= 0 && rr < N && cc < N && !grid[rr][cc];
+  });
+}
+
+function place(p, r, c) {
+  p.cells.forEach(([dx, dy]) => { grid[r + dy][c + dx] = 1; });
+  let gained = p.cells.length;
+  // find full rows/cols
+  const fullR = [], fullC = [];
+  for (let i = 0; i < N; i++) {
+    if (grid[i].every(v => v)) fullR.push(i);
+    if (grid.every(row => row[i])) fullC.push(i);
+  }
+  fullR.forEach(i => { for (let c2 = 0; c2 < N; c2++) grid[i][c2] = 0; });
+  fullC.forEach(i => { for (let r2 = 0; r2 < N; r2++) grid[r2][i] = 0; });
+  const lines = fullR.length + fullC.length;
+  if (lines) gained += lines * 10 * lines; // combo bonus
+  score += gained;
+  document.getElementById('score').textContent = score;
+  if (score > best) { best = score; localStorage.setItem('bp_best', best); document.getElementById('best').textContent = best; }
+}
+
+function anyMove() {
+  return tray.some(p => p && (() => {
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (canPlace(p, r, c)) return true;
+    return false;
+  })());
+}
+
+function renderTray() {
+  const t = document.getElementById('tray'); t.innerHTML = '';
+  tray.forEach((p, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'piece' + (i === sel ? ' sel' : '') + (p ? '' : ' used');
+    if (p) {
+      const u = 16;
+      const c = document.createElement('canvas');
+      c.width = p.w * u + 2; c.height = p.h * u + 2;
+      const cc = c.getContext('2d'); cc.fillStyle = '#fff';
+      p.cells.forEach(([x, y]) => { cc.fillRect(x * u + 1, y * u + 1, u - 2, u - 2); });
+      wrap.appendChild(c);
+      wrap.onclick = () => { sel = (sel === i ? -1 : i); renderTray(); draw(); };
+    }
+    t.appendChild(wrap);
+  });
+}
+
+function pointToCell(e) {
+  const rect = cv.getBoundingClientRect();
+  const px = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+  const py = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+  const c = Math.floor((px - GAP) / (CELL + GAP));
+  const r = Math.floor((py - GAP) / (CELL + GAP));
+  return { r, c };
+}
+
+cv.addEventListener('mousemove', (e) => { hover = pointToCell(e); draw(); });
+cv.addEventListener('mouseleave', () => { hover = null; draw(); });
+function tryPlaceAt(e) {
+  if (sel < 0 || !tray[sel]) return;
+  const { r, c } = pointToCell(e);
+  if (canPlace(tray[sel], r, c)) {
+    place(tray[sel], r, c);
+    tray[sel] = null; sel = -1;
+    if (tray.every(p => !p)) refill();
+    renderTray(); draw();
+    if (!anyMove()) gameOver();
+  }
+}
+cv.addEventListener('click', tryPlaceAt);
+cv.addEventListener('touchstart', (e) => { hover = pointToCell(e); draw(); }, { passive: true });
+cv.addEventListener('touchend', (e) => {
+  const t = e.changedTouches[0];
+  tryPlaceAt({ clientX: t.clientX, clientY: t.clientY });
+});
+
+function gameOver() {
+  document.getElementById('finalScore').textContent = 'Score ' + score;
+  document.getElementById('over').classList.add('show');
+}
+document.getElementById('again').onclick = () => {
+  grid = Array.from({ length: N }, () => Array(N).fill(0));
+  score = 0; sel = -1; document.getElementById('score').textContent = '0';
+  document.getElementById('over').classList.remove('show');
+  refill(); draw();
+};
+
+addEventListener('resize', sizeBoard);
+refill(); sizeBoard();
+</script>
+</body>
+</html>
