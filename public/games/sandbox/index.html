@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Physics Sandbox</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background: #000; }
+  body { font-family: ui-monospace, "JetBrains Mono", monospace; color: #fff; }
+  #scene { position: fixed; inset: 0; }
+  canvas { display: block; }
+  .bar {
+    position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 6px; padding: 6px; z-index: 10;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 999px; backdrop-filter: blur(8px); flex-wrap: wrap; justify-content: center;
+    max-width: 95vw;
+  }
+  .bar button {
+    background: transparent; color: #cfcfd4; border: 1px solid transparent;
+    border-radius: 999px; padding: 7px 13px; font: inherit; font-size: 12px; cursor: pointer;
+    transition: all .15s ease;
+  }
+  .bar button:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+  .bar button.on { background: #fff; color: #000; }
+  .hint {
+    position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; color: #6b6b75; z-index: 10; text-align: center; width: 100%;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<div class="bar" id="bar">
+  <button data-tool="box" class="on">▪ Box</button>
+  <button data-tool="ball">● Ball</button>
+  <button data-tool="plank">▬ Plank</button>
+  <button data-tool="drag">✥ Drag</button>
+  <button id="grav">⤓ Gravity: on</button>
+  <button id="boom">✺ Boom</button>
+  <button id="clear">⟲ Clear</button>
+</div>
+<div class="hint">Click / tap to drop shapes · pick a tool above · drag things around · Boom to blow it all up</div>
+
+<script src="matter.min.js"></script>
+<script>
+const { Engine, Render, Runner, World, Bodies, Body, Composite, Mouse, MouseConstraint, Events } = Matter;
+
+const engine = Engine.create();
+const world = engine.world;
+const el = document.getElementById('scene');
+
+const render = Render.create({
+  element: el, engine,
+  options: { width: innerWidth, height: innerHeight, wireframes: false, background: '#000', pixelRatio: Math.min(devicePixelRatio, 2) }
+});
+Render.run(render);
+Runner.run(Runner.create(), engine);
+
+const shade = () => { const v = 150 + Math.floor(Math.random()*105); return `rgb(${v},${v},${v})`; };
+const style = () => ({ fillStyle: shade(), strokeStyle: '#fff', lineWidth: 1 });
+
+function walls() {
+  const w = innerWidth, h = innerHeight, t = 80;
+  return [
+    Bodies.rectangle(w/2, h+t/2, w*2, t, { isStatic: true, render: { fillStyle:'#0a0a0c' } }),
+    Bodies.rectangle(-t/2, h/2, t, h*2, { isStatic: true, render: { fillStyle:'#0a0a0c' } }),
+    Bodies.rectangle(w+t/2, h/2, t, h*2, { isStatic: true, render: { fillStyle:'#0a0a0c' } }),
+  ];
+}
+let boundaries = walls();
+World.add(world, boundaries);
+
+let tool = 'box';
+function spawn(x, y) {
+  let b;
+  if (tool === 'box') b = Bodies.rectangle(x, y, 38+Math.random()*30, 38+Math.random()*30, { render: style(), restitution: .3 });
+  else if (tool === 'ball') b = Bodies.circle(x, y, 16+Math.random()*22, { render: style(), restitution: .6 });
+  else if (tool === 'plank') b = Bodies.rectangle(x, y, 120+Math.random()*80, 16, { render: style(), restitution: .2 });
+  else return;
+  World.add(world, b);
+}
+
+// Mouse + drag
+const mouse = Mouse.create(render.canvas);
+const mc = MouseConstraint.create(engine, { mouse, constraint: { stiffness: .2, render: { visible: false } } });
+World.add(world, mc);
+render.mouse = mouse;
+
+let down = false, moved = false;
+Events.on(mc, 'mousedown', () => { down = true; moved = false; });
+Events.on(mc, 'mousemove', () => { if (down) moved = true; });
+Events.on(mc, 'mouseup', (e) => {
+  // Only spawn if not dragging an existing body and tool isn't "drag"
+  if (tool !== 'drag' && !mc.body && !moved) spawn(e.mouse.position.x, e.mouse.position.y);
+  down = false;
+});
+
+// Toolbar
+document.querySelectorAll('.bar button[data-tool]').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.bar button[data-tool]').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on'); tool = btn.dataset.tool;
+  };
+});
+document.getElementById('grav').onclick = (e) => {
+  world.gravity.y = world.gravity.y === 0 ? 1 : 0;
+  e.target.textContent = '⤓ Gravity: ' + (world.gravity.y ? 'on' : 'off');
+};
+document.getElementById('clear').onclick = () => {
+  Composite.allBodies(world).forEach(b => { if (!b.isStatic) World.remove(world, b); });
+};
+document.getElementById('boom').onclick = () => {
+  const cx = innerWidth/2, cy = innerHeight/2;
+  Composite.allBodies(world).forEach(b => {
+    if (b.isStatic) return;
+    const dx = b.position.x - cx, dy = b.position.y - cy;
+    const d = Math.max(40, Math.hypot(dx, dy));
+    Body.applyForce(b, b.position, { x: (dx/d)*0.18*b.mass, y: (dy/d)*0.18*b.mass });
+  });
+};
+
+// seed a few
+for (let i=0;i<6;i++) spawn(innerWidth/2 + (Math.random()-.5)*200, 120 + i*10);
+
+addEventListener('resize', () => {
+  render.canvas.width = innerWidth; render.canvas.height = innerHeight;
+  render.options.width = innerWidth; render.options.height = innerHeight;
+  World.remove(world, boundaries); boundaries = walls(); World.add(world, boundaries);
+});
+</script>
+</body>
+</html>
