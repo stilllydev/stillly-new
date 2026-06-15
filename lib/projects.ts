@@ -29,7 +29,7 @@ export const sampleProjects: Project[] = [
     title: "Aurora",
     description: "A browser-based realtime 3D editor with a custom WebGL renderer.",
     long_description:
-      "Aurora is a collaborative 3D scene editor that runs entirely in the browser. It pairs a hand-written WebGL renderer with a CRDT sync layer so multiple people can sculpt the same scene at 120fps. This is placeholder content — replace it from the admin panel.",
+      "Aurora is a collaborative 3D scene editor that runs entirely in the browser. It pairs a hand-written WebGL renderer with a CRDT sync layer so multiple people can sculpt the same scene at 120fps — no plugins, no installs, just a URL.",
     tags: ["WebGL", "Rust/WASM", "TypeScript"],
     cover_image_url: null,
     ordering: 0,
@@ -41,7 +41,7 @@ export const sampleProjects: Project[] = [
     title: "Pulse",
     description: "A flamegraph profiler that finds render bottlenecks in seconds.",
     long_description:
-      "Pulse visualizes frame timing as an interactive flamegraph and surfaces the slowest paths automatically. Placeholder content — add your real projects in /admin.",
+      "Pulse visualizes frame timing as an interactive flamegraph and automatically surfaces the slowest paths in a render, so you spend your time fixing jank instead of hunting for it.",
     tags: ["Go", "Canvas", "CLI"],
     cover_image_url: null,
     ordering: 1,
@@ -53,7 +53,7 @@ export const sampleProjects: Project[] = [
     title: "Driftfield",
     description: "A generative art engine simulating fluid particle fields.",
     long_description:
-      "Driftfield renders audio-reactive fluid particle fields with GLSL. Placeholder content — swap in your own work from the admin panel.",
+      "Driftfield renders audio-reactive fluid particle fields in real time with GLSL, turning sound into drifting monochrome motion. Built as an experiment in shader-driven art that runs smoothly on a phone.",
     tags: ["GLSL", "Three.js", "Audio"],
     cover_image_url: null,
     ordering: 2,
