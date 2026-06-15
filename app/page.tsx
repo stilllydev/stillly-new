@@ -24,23 +24,36 @@ export default function Home() {
             <HeroCanvas />
           </div>
 
-          <div className="relative z-10 flex flex-col items-center">
-            <p className="mb-6 inline-flex items-center gap-2 rounded-full glass px-4 py-2 font-[family-name:var(--font-mono)] text-xs text-[color:var(--color-fg-dim)]">
+          <div className="relative z-10 flex flex-col items-center [text-shadow:0_2px_30px_rgba(0,0,0,0.7)]">
+            <p
+              className="hero-rise mb-6 inline-flex items-center gap-2 rounded-full glass px-4 py-2 font-[family-name:var(--font-mono)] text-xs text-[color:var(--color-fg-dim)]"
+              style={{ animationDelay: "0.1s" }}
+            >
               <span
                 className="inline-block h-2 w-2 rounded-full bg-white"
                 style={{ animation: "pulse-ring 2s infinite" }}
               />
               {site.tagline} · stillly.xyz
             </p>
-            <h1 className="font-[family-name:var(--font-display)] text-5xl font-bold leading-[0.95] tracking-tight sm:text-7xl md:text-8xl">
-              <span className="block">{site.name}</span>
-              <span className="shimmer block">builds for the web.</span>
+            <h1 className="font-[family-name:var(--font-display)] text-6xl font-bold leading-[0.92] tracking-tight sm:text-7xl md:text-[8.5rem]">
+              <span className="hero-rise block" style={{ animationDelay: "0.22s" }}>
+                {site.name}
+              </span>
+              <span className="hero-rise shimmer block" style={{ animationDelay: "0.34s" }}>
+                builds for the web.
+              </span>
             </h1>
-            <p className="mt-6 max-w-xl text-[color:var(--color-fg-dim)] sm:text-lg">
+            <p
+              className="hero-rise mt-7 max-w-xl text-[color:var(--color-fg-dim)] sm:text-lg"
+              style={{ animationDelay: "0.46s" }}
+            >
               Interactive 3D, thoughtful interfaces, and tools that feel alive —
-              rendered in black & white.
+              rendered in black &amp; white.
             </p>
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
+            <div
+              className="hero-rise mt-9 flex flex-wrap items-center justify-center gap-4"
+              style={{ animationDelay: "0.58s" }}
+            >
               <MagneticButton href="/portfolio">
                 View my work
                 <span aria-hidden>→</span>
@@ -51,7 +64,10 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2 font-[family-name:var(--font-mono)] text-[0.65rem] uppercase tracking-[0.3em] text-[color:var(--color-fg-faint)]">
+          <div
+            className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2 font-[family-name:var(--font-mono)] text-[0.65rem] uppercase tracking-[0.3em] text-[color:var(--color-fg-faint)]"
+            style={{ animation: "floatY 2.4s ease-in-out infinite" }}
+          >
             scroll ↓
           </div>
         </section>

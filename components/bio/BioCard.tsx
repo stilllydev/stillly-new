@@ -94,16 +94,28 @@ export default function BioCard() {
         </ul>
       )}
 
-      {/* States */}
-      {status !== "ready" && (
-        <p className="mt-4 font-[family-name:var(--font-mono)] text-xs text-[color:var(--color-fg-faint)]">
-          {status === "connecting"
-            ? "connecting to discord…"
-            : site.discordUserId
-            ? "presence unavailable — is the account in the Lanyard server?"
-            : "set NEXT_PUBLIC_LANYARD_USER_ID to show live presence"}
+      {/* Connecting shimmer (only while actively connecting with an id set) */}
+      {status === "connecting" && site.discordUserId && (
+        <p className="mt-4 flex items-center gap-2 font-[family-name:var(--font-mono)] text-xs text-[color:var(--color-fg-faint)]">
+          <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-white/60" />
+          syncing presence…
         </p>
       )}
+
+      {/* Always-present footer so the card reads finished, live data or not */}
+      <div className="mt-5 flex flex-wrap gap-2 border-t border-[color:var(--color-line)] pt-4">
+        {site.socials.map((s) => (
+          <a
+            key={s.label}
+            href={s.href}
+            target={s.href.startsWith("http") ? "_blank" : undefined}
+            rel="noopener noreferrer"
+            className="rounded-full border border-[color:var(--color-line)] px-3 py-1.5 font-[family-name:var(--font-mono)] text-[0.7rem] text-[color:var(--color-fg-dim)] transition-colors hover:bg-white hover:text-black"
+          >
+            {s.label}
+          </a>
+        ))}
+      </div>
     </div>
   );
 }

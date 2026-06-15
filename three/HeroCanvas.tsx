@@ -2,12 +2,14 @@
 
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useState } from "react";
-import HeroParticles from "./HeroParticles";
-import Effects from "./Effects";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
+import HeroFlow from "./HeroFlow";
+import HeroDust from "./HeroDust";
 
 /**
- * Client-only WebGL hero. Mounts after hydration to avoid SSR/hydration
- * mismatches, and falls back to a static gradient under reduced-motion.
+ * Client-only WebGL hero: a flowing grayscale ink field + drifting dust, with
+ * bloom on the brightest filaments. Mounts after hydration; falls back to a
+ * static gradient under reduced-motion or before mount.
  */
 export default function HeroCanvas() {
   const [mounted, setMounted] = useState(false);
@@ -25,7 +27,7 @@ export default function HeroCanvas() {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(50% 50% at 50% 45%, rgba(255,255,255,0.10), transparent 70%)",
+            "radial-gradient(120% 90% at 50% 30%, rgba(255,255,255,0.10), rgba(255,255,255,0.02) 40%, #000 75%)",
         }}
       />
     );
@@ -35,13 +37,17 @@ export default function HeroCanvas() {
     <Canvas
       className="absolute inset-0"
       dpr={[1, 2]}
-      gl={{ antialias: true, alpha: true }}
-      camera={{ position: [0, 0, 9], fov: 55 }}
+      gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
+      camera={{ position: [0, 0, 6], fov: 55 }}
       aria-hidden
     >
+      <color attach="background" args={["#000000"]} />
       <Suspense fallback={null}>
-        <HeroParticles />
-        <Effects />
+        <HeroFlow />
+        <HeroDust />
+        <EffectComposer>
+          <Bloom intensity={0.7} luminanceThreshold={0.55} luminanceSmoothing={0.85} mipmapBlur />
+        </EffectComposer>
       </Suspense>
     </Canvas>
   );
