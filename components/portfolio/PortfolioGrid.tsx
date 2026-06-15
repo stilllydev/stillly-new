@@ -16,19 +16,27 @@ function Cover({ project, className = "" }: { project: Project; className?: stri
       />
     );
   }
-  // Generated monochrome placeholder
+  // Generated monochrome placeholder — designed, not blank
   return (
     <div
       aria-hidden
-      className={`flex items-center justify-center ${className}`}
+      className={`relative flex items-center justify-center overflow-hidden ${className}`}
       style={{
         background:
-          "radial-gradient(80% 80% at 30% 20%, rgba(255,255,255,0.16), transparent 60%), #0c0c10",
+          "radial-gradient(90% 120% at 25% 0%, rgba(255,255,255,0.14), transparent 55%), linear-gradient(145deg, #101014, #060608)",
       }}
     >
-      <span className="font-[family-name:var(--font-display)] text-5xl font-bold text-white/15">
+      <div
+        className="absolute inset-0 opacity-[0.06]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(135deg, #fff 0 1px, transparent 1px 9px)",
+        }}
+      />
+      <span className="font-[family-name:var(--font-display)] text-[5.5rem] font-bold leading-none text-white/[0.08]">
         {project.title.slice(0, 2)}
       </span>
+      <span className="absolute right-4 top-4 text-white/20">✦</span>
     </div>
   );
 }
