@@ -1,14 +1,12 @@
 "use client";
 
 import { createBrowserClient } from "@supabase/ssr";
+import { supabaseConfig } from "@/lib/site";
 
 /**
- * Browser Supabase client (uses the public anon key).
- * Safe to expose: row-level security governs what the anon role can do.
+ * Browser Supabase client (public anon key — safe to expose; RLS governs access).
+ * Reads from env or the baked-in values in lib/site.ts.
  */
 export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  return createBrowserClient(supabaseConfig.url, supabaseConfig.anonKey);
 }
