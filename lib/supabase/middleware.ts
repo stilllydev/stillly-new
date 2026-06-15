@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { supabaseConfig } from "@/lib/site";
 
 /**
  * Refreshes the Supabase auth session on every request and guards /admin.
@@ -8,8 +9,8 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = supabaseConfig.url;
+  const anon = supabaseConfig.anonKey;
   // If Supabase isn't configured yet, don't block the rest of the site.
   if (!url || !anon) return response;
 
@@ -32,7 +33,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const adminId = process.env.NEXT_PUBLIC_ADMIN_USER_ID;
+  const adminId = supabaseConfig.adminUserId;
   const path = request.nextUrl.pathname;
   const isAdminArea = path.startsWith("/admin") && path !== "/admin/login";
 

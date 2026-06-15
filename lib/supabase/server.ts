@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { supabaseConfig } from "@/lib/site";
 
 /**
  * Server Supabase client for Server Components, Route Handlers and Server Actions.
@@ -9,8 +10,8 @@ export async function createClient() {
   const cookieStore = await cookies();
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseConfig.url,
+    supabaseConfig.anonKey,
     {
       cookies: {
         getAll() {
@@ -30,15 +31,12 @@ export async function createClient() {
   );
 }
 
-/** True when Supabase env vars are configured. Lets the UI degrade gracefully pre-setup. */
+/** True when Supabase is configured. Lets the UI degrade gracefully pre-setup. */
 export function isSupabaseConfigured() {
-  return (
-    !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  return !!supabaseConfig.url && !!supabaseConfig.anonKey;
 }
 
 /** The owner's Supabase auth UUID — the only account allowed into /admin. */
 export function getAdminUserId() {
-  return process.env.NEXT_PUBLIC_ADMIN_USER_ID ?? "";
+  return supabaseConfig.adminUserId;
 }
